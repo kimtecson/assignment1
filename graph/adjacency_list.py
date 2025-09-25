@@ -1,26 +1,25 @@
 # -------------------------------------------------
-# EDIT THIS FILE TO IMPLEMENT ADJACENCY LIST.
-# Class for Adjacency List representation of Graph.
+# DON'T CHANGE THIS FILE.
+# Class for Adjacency Matrix representation of Graph.
 #
-# __author__ = 'YOUR NAME HERE'
+# __author__ = 'Edward Small'
 # __copyright__ = 'Copyright 2025, RMIT University'
 # -------------------------------------------------
 
-from typing import List, Dict, Tuple
+from typing import List, Dict
 from graph.graph import Graph
 from graph.coordinate import Coordinate
 
-
-class AdjacencyListGraph(Graph):
+class AdjacencyMatrixGraph(Graph):
     """
-    Graph implementation using an adjacency list.
+    Graph implementation using an adjacency matrix.
     Vertices are Coordinates (rooms), and edges are weighted paths.
-    A weight of 0 between adjacent cells means a wall; weight > 0 means traversable with cost.
+    A weight of 0 means a wall; weight > 0 means traversable with cost.
     """
 
     def __init__(self, rows: int, cols: int):
         """
-        Initializes the graph with empty adjacency lists.
+        Initializes the graph with a fixed-size adjacency matrix.
 
         @param rows: Number of rows in the maze.
         @param cols: Number of columns in the maze.
@@ -29,20 +28,35 @@ class AdjacencyListGraph(Graph):
         self.cols = cols
         self.size = rows * cols
 
-        # Set of all vertices
+        # List of all vertices (rooms)
         self.vertices: List[Coordinate] = []
 
-        # Adjacency list: Coordinate → List[Tuple[Coordinate, weight]]
-        self.adj_list: Dict[Coordinate, List[Tuple[Coordinate, int]]] = {}
+        # Map from Coordinate to its index in the matrix
+        self.vertex_indices: Dict[Coordinate, int] = {}
+
+        # Preallocate the matrix with zeros
+        self.matrix: List[List[int]] = [
+            [0 for _ in range(self.size)] for _ in range(self.size)
+        ]
+
+    def _coord_to_index(self, coord: Coordinate) -> int:
+        """
+        Converts a Coordinate to its matrix index.
+
+        @param coord: Coordinate to convert.
+        @returns Integer index.
+        """
+        return coord.getRow() * self.cols + coord.getCol()
 
     def addVertex(self, label: Coordinate):
         """
-        Adds a vertex to the graph.
+        Adds a room to the graph.
 
         @param label: Coordinate of the room.
         """
-        if label not in self.adj_list:
-            self.adj_list[label] = []
+        if label not in self.vertex_indices:
+            index = self._coord_to_index(label)
+            self.vertex_indices[label] = index
             self.vertices.append(label)
 
     def addVertices(self, vertLabels: List[Coordinate]):
@@ -67,60 +81,81 @@ class AdjacencyListGraph(Graph):
 
         @returns True if edge added successfully, otherwise False.
         """
-        # Condition: both must be in the graph and is adjacent
-        if self._validateVertices(vert1, vert2) is False:
-            return False
+        if vert1 not in self.vertex_indices or vert2 not in self.vertex_indices:
+            return False  # Condition 2: both must be in the graph
 
-        # Condition: edge already exists (check if weight > 0)
-        if self.hasEdge(vert1, vert2):
-            return False
+        if not vert1.isAdjacent(vert2):
+            return False  # Condition 3: must be adjacent
 
-        # Add undirected edge
-        self.adj_list[vert1].append((vert2, weight))
-        self.adj_list[vert2].append((vert1, weight))
+        i = self.vertex_indices[vert1]
+        j = self.vertex_indices[vert2]
 
+        if self.matrix[i][j] > 0:
+            return False  # Condition 1: edge already exists
+
+        self.matrix[i][j] = weight
+        self.matrix[j][i] = weight  # Undirected
         return True
 
-    def updateWall(self, vert1: Coordinate, vert2: Coordinate, hasWall: bool, weight: int = 1) -> bool:
+    def updateWall(self, vert1: Coordinate, vert2: Coordinate, hasWall: bool, weight: int=1) -> bool:
         """
         Updates wall status between two rooms.
 
         @param vert1: First room.
         @param vert2: Second room.
         @param hasWall: True to add wall (weight = 0), False to remove wall (weight = 1).
-        @param weight: if we are remove a wall, what is the edge weight?
+        @param weight: If we are remove a wall, what is the edge weight?
 
         @returns True if update successful.
         """
-        # Condition: both must be in the graph and is adjacent
-        if self._validateVertices(vert1, vert2) is False:
-            return False
+        if (
+                vert1 not in self.vertex_indices or
+                vert2 not in self.vertex_indices or
+                not vert1.isAdjacent(vert2)
+        ):
+            return False  # Invalid update
 
-        # Set weight (0 for wall, specified weight for no wall)
-        edge_weight = 0 if hasWall else weight
-
-        # Update both directions (undirected)
-        self._updateDirectedEdge(vert1, vert2, edge_weight)
-        self._updateDirectedEdge(vert2, vert1, edge_weight)
-
+        i = self.vertex_indices[vert1]
+        j = self.vertex_indices[vert2]
+        self.matrix[i][j] = 0 if hasWall else weight
+        self.matrix[j][i] = 0 if hasWall else weight
         return True
 
     def print(self):
         """
-        Prints the adjacency list of the graph to the terminal. Like
+        Prints the adjacency matrix of the graph to the terminal.
 
-        (0, 0) -> [(0, 1), 1; (1, 0), 2]
-        (0, 1) -> [(0, 0), 1; (1, 1), 3]
-        ...
+        Each row/column is labelled by its Coordinate.
+        Entries show the edge weight (0 = wall, >0 = traversable path).
 
-        Useful for debugging.
-
-        @returns None
+        Also validates that non-zero entries only occur between adjacent rooms.
         """
-        for u in self.vertices:
-            edges = self.adj_list.get(u, [])
-            edge_strs = [f"({v.getRow()}, {v.getCol()}), {w}" for v, w in edges]
-            print(f"({u.getRow()}, {u.getCol()}) -> [{'; '.join(edge_strs)}]")
+        print("Adjacency Matrix:")
+
+        # Sort vertices by (row, col) for display
+        sorted_vertices = sorted(self.vertices, key=lambda v: (v.getRow(), v.getCol()))
+        labels = [f"({v.getRow()},{v.getCol()})" for v in sorted_vertices]
+
+        # Print header row
+        header = "         " + " ".join(f"{lab:>8}" for lab in labels)
+        print(header)
+
+        # Print each row
+        for i, u in enumerate(sorted_vertices):
+            label = labels[i]
+            values = []
+
+            for v in sorted_vertices:
+                i_idx = self._coord_to_index(u)
+                j_idx = self._coord_to_index(v)
+                val = self.matrix[i_idx][j_idx]
+
+                if val != 0 and not u.isAdjacent(v):
+                    print(f"⚠️ Invalid adjacency: {u} → {v} with weight {val}")
+
+                values.append(f"{val:8}")
+
+            print(f"{label:>8} {' '.join(values)}")
 
     def removeEdge(self, vert1: Coordinate, vert2: Coordinate) -> bool:
         """
@@ -131,17 +166,7 @@ class AdjacencyListGraph(Graph):
 
         @returns True if edge removed successfully.
         """
-        # Validation: same as other methods
-        if (vert1 not in self.adj_list or
-            vert2 not in self.adj_list or
-            not vert1.isAdjacent(vert2)):
-            return False
-
-        # Actually remove the entries (true removal)
-        self._removeDirectedEdge(vert1, vert2)
-        self._removeDirectedEdge(vert2, vert1)
-
-        return True
+        return self.updateWall(vert1, vert2, hasWall=True)
 
     def hasVertex(self, label: Coordinate) -> bool:
         """
@@ -151,7 +176,7 @@ class AdjacencyListGraph(Graph):
 
         @returns True if room exists.
         """
-        return label in self.adj_list
+        return label in self.vertex_indices
 
     def hasEdge(self, vert1: Coordinate, vert2: Coordinate) -> bool:
         """
@@ -162,11 +187,10 @@ class AdjacencyListGraph(Graph):
 
         @returns True if edge exists and is traversable.
         """
-        if vert1 in self.adj_list and vert2 in self.adj_list:
-            # Check if vert2 is in vert1's adjacency list with weight > 0
-            for neighbor, weight in self.adj_list[vert1]:
-                if neighbor == vert2 and weight > 0:
-                    return True
+        if vert1 in self.vertex_indices and vert2 in self.vertex_indices:
+            i = self.vertex_indices[vert1]
+            j = self.vertex_indices[vert2]
+            return self.matrix[i][j] > 0
         return False
 
     def getWallStatus(self, vert1: Coordinate, vert2: Coordinate) -> bool:
@@ -178,14 +202,9 @@ class AdjacencyListGraph(Graph):
 
         @returns True if wall exists (weight = 0), False otherwise.
         """
-        # Find the weight between the vertices
-        if vert1 in self.adj_list:
-            for neighbor, weight in self.adj_list[vert1]:
-                if neighbor == vert2:
-                    return weight == 0
-
-        # If no edge found, consider it a wall (implicit wall)
-        return True
+        i = self.vertex_indices[vert1]
+        j = self.vertex_indices[vert2]
+        return self.matrix[i][j] == 0
 
     def getWeight(self, vert1: Coordinate, vert2: Coordinate) -> int:
         """
@@ -193,60 +212,24 @@ class AdjacencyListGraph(Graph):
 
         @returns positive integer if edge exists, 0 otherwise.
         """
-        if vert1 in self.adj_list and vert2 in self.adj_list:
-            for neighbor, weight in self.adj_list[vert1]:
-                if neighbor == vert2:
-                    return weight if weight > 0 else 0
+        if vert1 in self.vertex_indices and vert2 in self.vertex_indices:
+            i = self.vertex_indices[vert1]
+            j = self.vertex_indices[vert2]
+            return self.matrix[i][j] if self.matrix[i][j] > 0 else 0
         return 0
 
     def getVertices(self) -> List[Coordinate]:
         return self.vertices
 
     def neighbours(self, label: Coordinate) -> List[Coordinate]:
-        """
-        Retrieves all accessible adjacent rooms.
-
-        @param label: Coordinate of the room.
-
-        @returns List of neighbouring Coordinates.
-        """
-        if not self.hasVertex(label):
+        if label not in self.vertex_indices:
             return []
 
-        neighbors = []
+        idx = self.vertex_indices[label]
+        index_to_coord = {i: v for v, i in self.vertex_indices.items()}
 
-        for neighbor, weight in self.adj_list[label]:
-            if weight > 0:  # Only include traversable edges (weight > 0)
-                neighbors.append(neighbor)
-
-        return neighbors
-
-    def _validateVertices(self, vert1: Coordinate, vert2: Coordinate) -> bool:
-        """
-        Helper method to validate that two vertices exist and are adjacent.
-
-        @param vert1: First vertex to validate.
-        @param vert2: Second vertex to validate.
-        @returns True if both vertices exist in graph and are adjacent, False otherwise.
-        """
-        return (vert1 in self.adj_list and
-                vert2 in self.adj_list and
-                vert1.isAdjacent(vert2))
-
-    def _removeDirectedEdge(self, from_vertex: Coordinate, to_vertex: Coordinate):
-        """
-        Helper method to remove a directed edge.
-        """
-        if from_vertex in self.adj_list:
-            self.adj_list[from_vertex] = [
-                (v, w) for v, w in self.adj_list[from_vertex] if v != to_vertex
-            ]
-
-    def _updateDirectedEdge(self, from_vertex: Coordinate, to_vertex: Coordinate, weight: int):
-        """
-        Helper method to update or add a directed edge.
-        """
-        # Remove existing edge first
-        self._removeDirectedEdge(from_vertex, to_vertex)
-        # Add new edge
-        self.adj_list[from_vertex].append((to_vertex, weight))
+        return [
+            index_to_coord[i]
+            for i in range(self.size)
+            if self.matrix[idx][i] > 0 and i in index_to_coord
+        ]

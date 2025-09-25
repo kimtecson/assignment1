@@ -14,7 +14,7 @@
   "max_weight": 10,
   "visualise": true,
   "print_struct": false,
-  "load_maze": false,
+  "load_maze": true,
   "save_maze": false,
   "maze_name": "specMaze"
 }
