@@ -5,7 +5,7 @@
     "row": 4,
     "col": 4
   },
-  "graph_type": "matrix",
+  "graph_type": "list",
   "maze_generator": "dfs",
   "maze_solver": "always_clone",
   "clone_cost": 5,

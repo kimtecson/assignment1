@@ -178,8 +178,14 @@ class AdjacencyListGraph(Graph):
 
         @returns True if wall exists (weight = 0), False otherwise.
         """
-        # IMPLEMENT ME
-        pass
+        # Find the weight between the vertices
+        if vert1 in self.adj_list:
+            for neighbor, weight in self.adj_list[vert1]:
+                if neighbor == vert2:
+                    return weight == 0
+
+        # If no edge found, consider it a wall (implicit wall)
+        return True
 
     def getWeight(self, vert1: Coordinate, vert2: Coordinate) -> int:
         """
@@ -187,7 +193,10 @@ class AdjacencyListGraph(Graph):
 
         @returns positive integer if edge exists, 0 otherwise.
         """
-        # IMPLEMENT ME
+        if vert1 in self.adj_list and vert2 in self.adj_list:
+            for neighbor, weight in self.adj_list[vert1]:
+                if neighbor == vert2:
+                    return weight if weight > 0 else 0
         return 0
 
     def getVertices(self) -> List[Coordinate]:
@@ -201,8 +210,16 @@ class AdjacencyListGraph(Graph):
 
         @returns List of neighbouring Coordinates.
         """
-        # IMPLEMENT ME
-        return []
+        if not self.hasVertex(label):
+            return []
+
+        neighbors = []
+
+        for neighbor, weight in self.adj_list[label]:
+            if weight > 0:  # Only include traversable edges (weight > 0)
+                neighbors.append(neighbor)
+
+        return neighbors
 
     def _validateVertices(self, vert1: Coordinate, vert2: Coordinate) -> bool:
         """
