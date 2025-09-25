@@ -151,8 +151,7 @@ class AdjacencyListGraph(Graph):
 
         @returns True if room exists.
         """
-        # IMPLEMENT ME
-        pass
+        return label in self.adj_list
 
     def hasEdge(self, vert1: Coordinate, vert2: Coordinate) -> bool:
         """
@@ -163,8 +162,12 @@ class AdjacencyListGraph(Graph):
 
         @returns True if edge exists and is traversable.
         """
-        # IMPLEMENT ME
-        pass
+        if vert1 in self.adj_list and vert2 in self.adj_list:
+            # Check if vert2 is in vert1's adjacency list with weight > 0
+            for neighbor, weight in self.adj_list[vert1]:
+                if neighbor == vert2 and weight > 0:
+                    return True
+        return False
 
     def getWallStatus(self, vert1: Coordinate, vert2: Coordinate) -> bool:
         """
