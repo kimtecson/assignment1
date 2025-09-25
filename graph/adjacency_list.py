@@ -67,8 +67,23 @@ class AdjacencyListGraph(Graph):
 
         @returns True if edge added successfully, otherwise False.
         """
-        # IMPLEMENT ME
-        pass
+        # Condition: both must be in the graph
+        if vert1 not in self.adj_list or vert2 not in self.adj_list:
+            return False
+
+        # Condition: must be adjacent (using Coordinate's isAdjacent method)
+        if not vert1.isAdjacent(vert2):
+            return False
+
+        # Condition: edge already exists (check if weight > 0)
+        if self.hasEdge(vert1, vert2):
+            return False
+
+        # Add undirected edge
+        self.adj_list[vert1].append((vert2, weight))
+        self.adj_list[vert2].append((vert1, weight))
+
+        return True
 
     def updateWall(self, vert1: Coordinate, vert2: Coordinate, hasWall: bool, weight: int = 1) -> bool:
         """
