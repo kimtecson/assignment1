@@ -67,12 +67,8 @@ class AdjacencyListGraph(Graph):
 
         @returns True if edge added successfully, otherwise False.
         """
-        # Condition: both must be in the graph
-        if vert1 not in self.adj_list or vert2 not in self.adj_list:
-            return False
-
-        # Condition: must be adjacent (using Coordinate's isAdjacent method)
-        if not vert1.isAdjacent(vert2):
+        # Condition: both must be in the graph and is adjacent
+        if self._validateVertices(vert1, vert2) is False:
             return False
 
         # Condition: edge already exists (check if weight > 0)
@@ -96,10 +92,8 @@ class AdjacencyListGraph(Graph):
 
         @returns True if update successful.
         """
-        # Same validation as matrix implementation
-        if (vert1 not in self.adj_list or
-            vert2 not in self.adj_list or
-            not vert1.isAdjacent(vert2)):
+        # Condition: both must be in the graph and is adjacent
+        if self._validateVertices(vert1, vert2) is False:
             return False
 
         # Set weight (0 for wall, specified weight for no wall)
