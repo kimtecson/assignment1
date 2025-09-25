@@ -212,3 +212,21 @@ class AdjacencyListGraph(Graph):
         return (vert1 in self.adj_list and
                 vert2 in self.adj_list and
                 vert1.isAdjacent(vert2))
+
+    def _removeDirectedEdge(self, from_vertex: Coordinate, to_vertex: Coordinate):
+        """
+        Helper method to remove a directed edge.
+        """
+        if from_vertex in self.adj_list:
+            self.adj_list[from_vertex] = [
+                (v, w) for v, w in self.adj_list[from_vertex] if v != to_vertex
+            ]
+
+    def _updateDirectedEdge(self, from_vertex: Coordinate, to_vertex: Coordinate, weight: int):
+        """
+        Helper method to update or add a directed edge.
+        """
+        # Remove existing edge first
+        self._removeDirectedEdge(from_vertex, to_vertex)
+        # Add new edge
+        self.adj_list[from_vertex].append((to_vertex, weight))
