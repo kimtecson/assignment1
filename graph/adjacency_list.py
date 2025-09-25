@@ -96,8 +96,20 @@ class AdjacencyListGraph(Graph):
 
         @returns True if update successful.
         """
-        # IMPLEMENT ME
-        pass
+        # Same validation as matrix implementation
+        if (vert1 not in self.adj_list or
+            vert2 not in self.adj_list or
+            not vert1.isAdjacent(vert2)):
+            return False
+
+        # Set weight (0 for wall, specified weight for no wall)
+        edge_weight = 0 if hasWall else weight
+
+        # Update both directions (undirected)
+        self._updateDirectedEdge(vert1, vert2, edge_weight)
+        self._updateDirectedEdge(vert2, vert1, edge_weight)
+
+        return True
 
     def print(self):
         """
@@ -125,8 +137,17 @@ class AdjacencyListGraph(Graph):
 
         @returns True if edge removed successfully.
         """
-        # IMPLEMENT ME
-        pass
+        # Validation: same as other methods
+        if (vert1 not in self.adj_list or
+            vert2 not in self.adj_list or
+            not vert1.isAdjacent(vert2)):
+            return False
+
+        # Actually remove the entries (true removal)
+        self._removeDirectedEdge(vert1, vert2)
+        self._removeDirectedEdge(vert2, vert1)
+
+        return True
 
     def hasVertex(self, label: Coordinate) -> bool:
         """
@@ -185,3 +206,15 @@ class AdjacencyListGraph(Graph):
         """
         # IMPLEMENT ME
         return []
+
+    def _validateVertices(self, vert1: Coordinate, vert2: Coordinate) -> bool:
+        """
+        Helper method to validate that two vertices exist and are adjacent.
+
+        @param vert1: First vertex to validate.
+        @param vert2: Second vertex to validate.
+        @returns True if both vertices exist in graph and are adjacent, False otherwise.
+        """
+        return (vert1 in self.adj_list and
+                vert2 in self.adj_list and
+                vert1.isAdjacent(vert2))
