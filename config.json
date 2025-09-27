@@ -5,9 +5,9 @@
     "row": 0,
     "col": 0
   },
-  "graph_type": "list",
+  "graph_type": "matrix",
   "maze_generator": "dfs",
-  "maze_solver": "always_clone",
+  "maze_solver": "no_clone",
   "clone_cost": 10,
   "mst_generator": "prims",
   "wall_removal_perc": 20,

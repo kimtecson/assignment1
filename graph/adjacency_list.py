@@ -2,7 +2,7 @@
 # EDIT THIS FILE TO IMPLEMENT ADJACENCY LIST.
 # Class for Adjacency List representation of Graph.
 #
-# __author__ = 'YOUR NAME HERE'
+# __author__ = 'Kimberly Tecson'
 # __copyright__ = 'Copyright 2025, RMIT University'
 # -------------------------------------------------
 
@@ -87,8 +87,8 @@ class AdjacencyListGraph(Graph):
 
         @param vert1: First room.
         @param vert2: Second room.
-        @param hasWall: True to add wall (weight = 0), False to remove wall (weight = 1).
-        @param weight: if we are remove a wall, what is the edge weight?
+        @param hasWall: True to add wall (remove edge), False to remove wall (add edge).
+        @param weight: if we are removing a wall, what is the edge weight?
 
         @returns True if update successful.
         """
@@ -96,13 +96,15 @@ class AdjacencyListGraph(Graph):
         if self._validateVertices(vert1, vert2) is False:
             return False
 
-        # Set weight (0 for wall, specified weight for no wall)
-        edge_weight = 0 if hasWall else weight
+        # Remove existing edge first (if any)
+        self.adj_list[vert1] = [(v, w) for v, w in self.adj_list[vert1] if v != vert2]
+        self.adj_list[vert2] = [(v, w) for v, w in self.adj_list[vert2] if v != vert1]
 
-        # Update both directions (undirected)
-        self._updateDirectedEdge(vert1, vert2, edge_weight)
-        self._updateDirectedEdge(vert2, vert1, edge_weight)
-
+        # If hasWall is False, add an edge with the specified weight
+        # If hasWall is True, don't add anything (wall = no edge)
+        if not hasWall:
+            self.adj_list[vert1].append((vert2, weight))
+            self.adj_list[vert2].append((vert1, weight))
         return True
 
     def print(self):
@@ -131,17 +133,8 @@ class AdjacencyListGraph(Graph):
 
         @returns True if edge removed successfully.
         """
-        # Validation: same as other methods
-        if (vert1 not in self.adj_list or
-            vert2 not in self.adj_list or
-            not vert1.isAdjacent(vert2)):
-            return False
+        return self.updateWall(vert1, vert2, hasWall=True)
 
-        # Actually remove the entries (true removal)
-        self._removeDirectedEdge(vert1, vert2)
-        self._removeDirectedEdge(vert2, vert1)
-
-        return True
 
     def hasVertex(self, label: Coordinate) -> bool:
         """
@@ -163,9 +156,9 @@ class AdjacencyListGraph(Graph):
         @returns True if edge exists and is traversable.
         """
         if vert1 in self.adj_list and vert2 in self.adj_list:
-            # Check if vert2 is in vert1's adjacency list with weight > 0
+            # Check if vert2 is in vert1's adjacency list
             for neighbor, weight in self.adj_list[vert1]:
-                if neighbor == vert2 and weight > 0:
+                if neighbor == vert2:
                     return True
         return False
 
@@ -176,16 +169,14 @@ class AdjacencyListGraph(Graph):
         @param vert1: First room.
         @param vert2: Second room.
 
-        @returns True if wall exists (weight = 0), False otherwise.
+        @returns True if wall exists (no edge), False otherwise.
         """
-        # Find the weight between the vertices
-        if vert1 in self.adj_list:
-            for neighbor, weight in self.adj_list[vert1]:
-                if neighbor == vert2:
-                    return weight == 0
+        # If vertices are adjacent but not in each other's adjacency lists, it's a wall
+        if vert1.isAdjacent(vert2):
+            return not self.hasEdge(vert1, vert2)
 
-        # If no edge found, consider it a wall (implicit wall)
-        return True
+        # If not adjacent, it's not a wall (just not connected)
+        return False
 
     def getWeight(self, vert1: Coordinate, vert2: Coordinate) -> int:
         """
@@ -196,7 +187,7 @@ class AdjacencyListGraph(Graph):
         if vert1 in self.adj_list and vert2 in self.adj_list:
             for neighbor, weight in self.adj_list[vert1]:
                 if neighbor == vert2:
-                    return weight if weight > 0 else 0
+                    return weight
         return 0
 
     def getVertices(self) -> List[Coordinate]:
@@ -216,8 +207,8 @@ class AdjacencyListGraph(Graph):
         neighbors = []
 
         for neighbor, weight in self.adj_list[label]:
-            if weight > 0:  # Only include traversable edges (weight > 0)
-                neighbors.append(neighbor)
+            # All edges in the adjacency list are traversable (no walls)
+            neighbors.append(neighbor)
 
         return neighbors
 
@@ -232,21 +223,3 @@ class AdjacencyListGraph(Graph):
         return (vert1 in self.adj_list and
                 vert2 in self.adj_list and
                 vert1.isAdjacent(vert2))
-
-    def _removeDirectedEdge(self, from_vertex: Coordinate, to_vertex: Coordinate):
-        """
-        Helper method to remove a directed edge.
-        """
-        if from_vertex in self.adj_list:
-            self.adj_list[from_vertex] = [
-                (v, w) for v, w in self.adj_list[from_vertex] if v != to_vertex
-            ]
-
-    def _updateDirectedEdge(self, from_vertex: Coordinate, to_vertex: Coordinate, weight: int):
-        """
-        Helper method to update or add a directed edge.
-        """
-        # Remove existing edge first
-        self._removeDirectedEdge(from_vertex, to_vertex)
-        # Add new edge
-        self.adj_list[from_vertex].append((to_vertex, weight))
