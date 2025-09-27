@@ -2,19 +2,19 @@
   "rows": 9,
   "cols": 9,
   "entrance": {
-    "row": 4,
-    "col": 4
+    "row": 0,
+    "col": 0
   },
   "graph_type": "list",
   "maze_generator": "dfs",
   "maze_solver": "always_clone",
-  "clone_cost": 5,
+  "clone_cost": 10,
   "mst_generator": "prims",
-  "wall_removal_perc": 10,
-  "max_weight": 10,
+  "wall_removal_perc": 20,
+  "max_weight": 25,
   "visualise": true,
-  "print_struct": false,
+  "print_struct": true,
   "load_maze": true,
   "save_maze": false,
-  "maze_name": "specMaze"
+  "maze_name": "testMaze1"
 }

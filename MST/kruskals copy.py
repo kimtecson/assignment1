@@ -26,44 +26,7 @@ def kruskalMST(graph: Graph) -> Graph:
     mst = type(graph)(graph.rows, graph.cols)
     mst.addVertices(graph.getVertices())
 
-    # Collect all edges from the graph
-    edges = []
-    added_edges = set()  # Track edges to avoid duplicates
-
-    for vertex in graph.getVertices():
-        for neighbor in graph.neighbours(vertex):
-            weight = graph.getWeight(vertex, neighbor)
-            # Create a unique identifier for the edge (sorted coordinates)
-            edge_id = tuple(sorted([vertex, neighbor], key=lambda c: (c.getRow(), c.getCol())))
-
-            # Only add each edge once (avoid duplicates)
-            if edge_id not in added_edges:
-                added_edges.add(edge_id)
-                edges.append((weight, vertex, neighbor))
-
-    # Sort edges by weight (ascending order)
-    # Use a custom key to avoid Coordinate comparison issues
-    edges.sort(key=lambda edge: (edge[0], edge[1].getRow(), edge[1].getCol(), edge[2].getRow(), edge[2].getCol()))
-
-    # Initialize Union-Find data structure
-    parent = {}
-    for vertex in graph.getVertices():
-        parent[vertex] = vertex
-
-    # Kruskal's algorithm: add edges in order of increasing weight
-    edges_added = 0
-    vertices_count = len(graph.getVertices())
-
-    for weight, u, v in edges:
-        # Check if adding this edge would create a cycle
-        if union(u, v, parent):
-            # No cycle created, add edge to MST
-            mst.addEdge(u, v, weight)
-            edges_added += 1
-
-            # MST is complete when we have V-1 edges
-            if edges_added == vertices_count - 1:
-                break
+    # IMPLEMENT ME HERE
 
     return mst
 
