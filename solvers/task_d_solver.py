@@ -46,17 +46,113 @@ def task_d_explore(graph: Graph, current: Coordinate, visited: set,
 
     # put your exploration below!
     while True:
-        break  # remove this line when you are ready to go
+        # Get all unvisited neighbors with their edge weights
+        unvisited = [
+            (neighbor, graph.getWeight(current, neighbor))
+            for neighbor in graph.neighbours(current)
+            if neighbor not in visited
+        ]
 
-        """BE SURE TO LOOK AT THE OTHER SOLVERS FOR INSPIRATION
-        
-        # HINT: Use graph.neighbours(current) to find adjacent nodes.
-        # HINT: Use graph.getWeight(a, b) to get edge weights.
-        # HINT: Use estimate_subtree_weight(...) to find the total weight in a sub-tree (branch).
-        # HINT: Use dfsBacktrack(...) to return to junctions after exploring branches.
-        # HINT: Use all_paths.append([...]) to spawn a new clone path."""
+        # Base case: no more unvisited neighbors
+        if not unvisited:
+            break
+
+        # Single neighbor: just continue without branching
+        if len(unvisited) == 1:
+            neighbor, _ = unvisited[0]
+            current = neighbor
+            path.append(current)
+            visited.add(current)
+            continue
+
+        # Multiple neighbors: need to decide on cloning strategy
+        # Calculate cost metrics for each branch
+        branch_metrics = []
+        for neighbor, edge_weight in unvisited:
+            # Estimate total weight of the subtree
+            subtree_weight = estimate_subtree_weight(graph, neighbor, visited.copy())
+
+            # Cost to explore and return = 2 × (edge_weight + subtree_weight)
+            # We have to go there AND come back if we don't clone
+            backtrack_cost = 2 * (edge_weight + subtree_weight)
+
+            branch_metrics.append({
+                'neighbor': neighbor,
+                'edge_weight': edge_weight,
+                'subtree_weight': subtree_weight,
+                'backtrack_cost': backtrack_cost
+            })
+
+        # Sort by subtree weight (ascending) to handle smallest branches first
+        branch_metrics.sort(key=lambda x: x['subtree_weight'])
+
+        # Decision: clone for branches where backtracking is more expensive than cloning
+        branches_to_clone = []
+        main_branch = None
+
+        for branch in branch_metrics[:-1]:  # All but the largest
+            # Clone if: cost of backtracking > cost of cloning
+            # The clone saves us: backtrack_cost - edge_weight (we still pay edge once)
+            savings = branch['backtrack_cost'] - branch['edge_weight']
+
+            if savings > clone_cost:
+                branches_to_clone.append(branch)
+            else:
+                # Not worth cloning, we'll explore it ourselves later
+                pass
+
+        # The largest branch becomes our main path (we explore it personally)
+        main_branch = branch_metrics[-1]
+
+        # Spawn clones for beneficial branches
+        for branch in branches_to_clone:
+            neighbor = branch['neighbor']
+            visited.add(neighbor)
+
+            # Create new explorer path starting from current junction
+            clone_id = len(all_paths)
+
+            # Recursively explore with the clone
+            task_d_explore(graph, neighbor, visited, all_paths, clone_id, clone_cost)
+
+            # Add junction to start of clone's path (spawn point)
+            all_paths[clone_id].insert(0, current)
+
+        # Now explore branches we decided NOT to clone (if any)
+        for branch in branch_metrics[:-1]:
+            if branch not in branches_to_clone:
+                neighbor = branch['neighbor']
+                if neighbor not in visited:
+                    # Explore this branch ourselves
+                    path.append(neighbor)
+                    visited.add(neighbor)
+
+                    # Recursively explore the subtree
+                    _explore_subtree(graph, neighbor, visited, path)
+
+                    # Backtrack to junction
+                    path.append(current)
+
+        # Finally, commit to the main (largest) branch
+        main_neighbor = main_branch['neighbor']
+        current = main_neighbor
+        path.append(current)
+        visited.add(current)
 
     return len(all_paths) - 1  # number of current clones
+
+def _explore_subtree(graph: Graph, node: Coordinate, visited: set, path: list[Coordinate]):
+    """
+    Helper function to explore a subtree using DFS without cloning.
+    Used when we've decided to explore a branch ourselves rather than clone.
+    """
+    neighbors = [n for n in graph.neighbours(node) if n not in visited]
+
+    for neighbor in neighbors:
+        path.append(neighbor)
+        visited.add(neighbor)
+        _explore_subtree(graph, neighbor, visited, path)
+        path.append(node)
 
 
 def task_d_solver(graph: Graph, start: Coordinate, clone_cost: int) -> tuple[list[list[Coordinate]], int, int]:

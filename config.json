@@ -1,6 +1,6 @@
 {
-  "rows": 9,
-  "cols": 9,
+  "rows": 80,
+  "cols": 80,
   "entrance": {
     "row": 0,
     "col": 0
@@ -10,11 +10,11 @@
   "maze_solver": "no_clone",
   "clone_cost": 10,
   "mst_generator": "prims",
-  "wall_removal_perc": 20,
+  "wall_removal_perc": 0,
   "max_weight": 25,
-  "visualise": true,
-  "print_struct": true,
-  "load_maze": true,
+  "visualise": false,
+  "print_struct": false,
+  "load_maze": false,
   "save_maze": false,
-  "maze_name": "testMaze1"
+  "maze_name": "test"
 }

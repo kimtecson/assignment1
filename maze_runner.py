@@ -22,6 +22,8 @@ from solvers.no_clone import no_clone_solver
 from solvers.always_clone import always_clone_solver
 from solvers.task_d_solver import task_d_solver
 
+sys.setrecursionlimit(5000)
+
 # enforce python version >= 3.13
 if sys.version_info < (3, 13):
     print("Error: Python 3.13 or higher is required to run Maze of Many.")
